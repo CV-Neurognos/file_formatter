@@ -29,7 +29,7 @@ if uploaded_file:
     loinc_db = loinc_db.dropna()
 
     novus_output = pd.merge(left=novus_output, right=loinc_db, how='left', left_on=['nameExam','nameIndicator'], right_on=['Prestacion Orden', 'Prestación Estructura'])
-    #novus_output = novus_output.drop(['TESTED' , 'LONG_COMMON_NAME'],axis = 1)
+    novus_output = novus_output.drop(['Prestación Estructura' , 'Prestacion Orden'],axis = 1)
 
     # add category field
     novus_output = pd.merge(left = novus_output, right= category_exams, how='left')
