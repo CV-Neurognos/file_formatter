@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 
 @st.cache
 def convert_df(df):
@@ -22,7 +23,6 @@ if uploaded_file:
     # Create empty cols
     novus_output['requestStatus'] = 1
     novus_output['examStatus'] = 1
-    novus_output['outOfRange'] = True
 
     #codeIndicator
     loinc_db = pd.read_csv('prestacion_combinaciones_2.csv' , sep='\t',error_bad_lines=False)
@@ -33,6 +33,13 @@ if uploaded_file:
 
     # add category field
     novus_output = pd.merge(left = novus_output, right= category_exams, how='left')
+    novus_output['category'][novus_output['nameExam'].str.contains("Orina")] = "ORINA"
+    novus_output['category'][novus_output['nameExam'].str.contains("PERFIL LIPIDICO")] = "SANGRE"
+
+    # reportar True en outofrange si analista flageo con *
+    novus_output['outOfRange']  = np.where(novus_output['Estado'] == '*', True, False)
+
+
 
     csv = convert_df(novus_output)
 
