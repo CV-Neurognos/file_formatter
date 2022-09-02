@@ -25,10 +25,10 @@ if uploaded_file:
     novus_output['outOfRange'] = True
 
     #codeIndicator
-    loinc_db = pd.read_csv('loinc_db.csv')
+    loinc_db = pd.read_csv('prestacion_combinaciones_2.csv' , sep='\t',error_bad_lines=False)
     loinc_db = loinc_db.dropna()
 
-    novus_output = pd.merge(left=novus_output, right=loinc_db, how='left', left_on='nameIndicator', right_on='TESTED')
+    novus_output = pd.merge(left=novus_output, right=loinc_db, how='left', left_on=['nameExam','nameIndicator'], right_on=['Prestacion Orden', 'Prestación Estructura'])
     novus_output = novus_output.drop(['TESTED' , 'LONG_COMMON_NAME'],axis = 1)
 
     # add category field
