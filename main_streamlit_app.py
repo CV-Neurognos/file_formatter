@@ -52,7 +52,7 @@ if uploaded_file:
     novus_output['examStatus'] = 1
 
     #codeIndicator
-    loinc_db = pd.read_csv('prestacion_combinaciones_2.csv' , sep='\t',error_bad_lines=False)
+    loinc_db = pd.read_csv('loinc_db.csv' , sep='\t',error_bad_lines=False)
     loinc_db = loinc_db.dropna()
 
     novus_output = pd.merge(left=novus_output, right=loinc_db, how='left', left_on=['nameExam','nameIndicator'], right_on=['Prestacion Orden', 'Prestación Estructura'])
@@ -62,6 +62,8 @@ if uploaded_file:
     novus_output = pd.merge(left = novus_output, right= category_exams, how='left')
     novus_output['category'][novus_output['nameExam'].str.contains("Orina")] = "ORINA"
     novus_output['category'][novus_output['nameExam'].str.contains("PERFIL LIPIDICO")] = "SANGRE"
+        novus_output['category'][novus_output['nameExam'].str.contains("PERFIL BIOQUIMICO")] = "SANGRE"
+
 
     # reportar True en outofrange si analista flageo con *
     novus_output['outOfRange']  = np.where(novus_output['Estado'] == '*', True, False)
