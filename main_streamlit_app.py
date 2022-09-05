@@ -8,7 +8,7 @@ def convert_df(df):
 
 def get_type(cell):
     if pd.isna(cell):
-        return ('not assign') , None , None
+        return ('other') , None , None
     cell_string = cell.lower()
     array_splitted = cell_string.split(' ')
     #caso hasta:
@@ -29,7 +29,7 @@ def get_type(cell):
     if 'negativo' in array_splitted:
         return 'true-false',None,None
     else:
-        return None,None,None
+        return 'other',None,None
         
 
         
@@ -62,7 +62,7 @@ if uploaded_file:
     novus_output = pd.merge(left = novus_output, right= category_exams, how='left')
     novus_output['category'][novus_output['nameExam'].str.contains("Orina")] = "ORINA"
     novus_output['category'][novus_output['nameExam'].str.contains("PERFIL LIPIDICO")] = "SANGRE"
-        novus_output['category'][novus_output['nameExam'].str.contains("PERFIL BIOQUIMICO")] = "SANGRE"
+    novus_output['category'][novus_output['nameExam'].str.contains("PERFIL BIOQUIMICO")] = "SANGRE"
 
 
     # reportar True en outofrange si analista flageo con *
@@ -72,7 +72,10 @@ if uploaded_file:
 
     novus_output['categoryIndicator'], novus_output['referenceInf'], novus_output['referenceSup'] = zip(*novus_output['Rango Ref'].apply(get_type))
 
+    # reference verification Orina
 
+    novus_output['referenceVerification(ORINA/DEFINIR)'] = np.nan
+    novus_output['otherResults'] = np.nan
 
 
     csv = convert_df(novus_output)
