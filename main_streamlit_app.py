@@ -82,6 +82,11 @@ if uploaded_file:
 
     novus_output['referenceVerification(ORINA/DEFINIR)'] = np.nan
     novus_output['otherResults'] = np.nan
+    novus_output['descriptionIndicator'] = np.nan
+
+    # drop columnas sobrantes
+
+    novus_output = novus_output.drop(['Estado' , 'Rango Ref'],axis = 1)
 
 
     csv = convert_df(novus_output)
