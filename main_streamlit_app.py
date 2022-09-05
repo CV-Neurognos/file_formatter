@@ -32,7 +32,7 @@ def get_type(cell):
         return 'other',None,None
         
 
-        
+    # cambiar a confidencial vih
 
 uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 
@@ -71,6 +71,14 @@ if uploaded_file:
     # asignar tipo de rango y valores inferiores y superiores.
 
     novus_output['categoryIndicator'], novus_output['referenceInf'], novus_output['referenceSup'] = zip(*novus_output['Rango Ref'].apply(get_type))
+    
+
+    # cambiar nombre a vih
+    novus_output.loc[novus_output.nameExam == 'HIV.ISP', 'categoryIndicator'] = 'confidencial'
+    novus_output.loc[novus_output.nameExam == 'HIV', 'categoryIndicator'] = 'confidencial'
+
+    
+    
 
     # reference verification Orina
 
