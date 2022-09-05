@@ -78,8 +78,6 @@ if uploaded_file:
     novus_output.loc[novus_output.nameExam == 'HIV', 'categoryIndicator'] = 'confidencial'
 
     
-    
-
     # reference verification Orina
 
     novus_output['referenceVerification(ORINA/DEFINIR)'] = np.nan
