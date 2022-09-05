@@ -62,7 +62,7 @@ if uploaded_file:
     novus_output = pd.merge(left = novus_output, right= category_exams, how='left')
     novus_output['category'][novus_output['nameExam'].str.contains("Orina")] = "ORINA"
     novus_output['category'][novus_output['nameExam'].str.contains("PERFIL LIPIDICO")] = "SANGRE"
-        novus_output['category'][novus_output['nameExam'].str.contains("PERFIL BIOQUIMICO")] = "SANGRE"
+    novus_output['category'][novus_output['nameExam'].str.contains("PERFIL BIOQUIMICO")] = "SANGRE"
 
 
     # reportar True en outofrange si analista flageo con *
