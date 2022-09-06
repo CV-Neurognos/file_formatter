@@ -1,6 +1,7 @@
-# file_formatter
-novus_output ---> tested_input 
+# file_formatter 
 
-# Complete LOINC ID
-# complete exam categories
-# curate exam normal ranges
+input: descarga de prestaciones de lims.
+output: contenido parseado y formateado. 
+
+# Esta hecho para framework streamlit
+
