@@ -1,3 +1,8 @@
+#################################################################################
+#####################       LIBRERIAS y FUNCIONES    ############################
+#################################################################################
+
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -37,51 +42,51 @@ def get_type(cell):
     else:
         return 'other', None, None
 
-    # cambiar a confidencial vih
+DICT_COLNAMES = {"Valor": "result", 'Prestación Estructura': 'nameIndicator', "Unidad": "unitMeasurement", "Fecha": "dateExam","CodFonasa": "code", "Orden": "requestId", "Documento": "clientId", "Paciente": "clientName", "CodInterno": "codeInternal", "Prestacion Orden": "nameExam"}
 
+
+#################################################################################
+#####################            STREAMLIT           ############################
+#################################################################################
 
 uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 
 if uploaded_file:
+    # import novuslis output
     novus_output = pd.read_excel(uploaded_file, skiprows=1)
-    novus_output = novus_output.rename(columns={"Valor": "result", 'Prestación Estructura': 'nameIndicator', "Unidad": "unitMeasurement", "Fecha": "dateExam",
-                                                "CodFonasa": "code", "Orden": "requestId", "Documento": "clientId", "Paciente": "clientName", "CodInterno": "codeInternal", "Prestacion Orden": "nameExam"})
-    # import categories from each examn ( SANGRE, ORINA, etc)
 
-    category_exams = pd.read_csv('category_exams.csv')
+    # cambiar de nombre columnas - usando dict_colnames
+    novus_output = novus_output.rename(columns=DICT_COLNAMES)
+    
     # Drop columns
     novus_output = novus_output.drop(["Programa", "Edad", "Sexo"], axis=1)
-    novus_output = novus_output[novus_output.columns.drop(
-        list(novus_output.filter(regex='Unnamed')))]
+    novus_output = novus_output[novus_output.columns.drop(list(novus_output.filter(regex='Unnamed')))]
 
-    # codeIndicator
+    # Agregar codigos LOINC: codeIndicator
     loinc_db = pd.read_csv('loinc_db.csv', sep='\t', error_bad_lines=False)
     loinc_db = loinc_db.dropna()
 
-    novus_output = pd.merge(left=novus_output, right=loinc_db, how='left', left_on=[
-                            'nameExam', 'nameIndicator'], right_on=['Prestacion Orden', 'Prestación Estructura'])
-    novus_output = novus_output.drop(
-        ['Prestación Estructura', 'Prestacion Orden'], axis=1)
+    novus_output = pd.merge(left=novus_output, right=loinc_db, how='left', left_on=['nameExam', 'nameIndicator'], right_on=['Prestacion Orden', 'Prestación Estructura'])
+    novus_output = novus_output.drop(['Prestación Estructura', 'Prestacion Orden'], axis=1)
 
-    # add category field
-    novus_output = pd.merge(
-        left=novus_output, right=category_exams, how='left')
-    novus_output['category'][novus_output['nameExam'].str.contains(
-        "Orina")] = "ORINA"
-    novus_output['category'][novus_output['nameExam'].str.contains(
-        "PERFIL LIPIDICO")] = "SANGRE"
-    novus_output['category'][novus_output['nameExam'].str.contains(
-        "PERFIL BIOQUIMICO")] = "SANGRE"
-    novus_output['category'][novus_output['nameExam'].str.contains(
-        "PERFIL HEPÁTICO")] = "SANGRE"
+    
+    # import categories ( SANGRE, ORINA, etc)
+    category_exams = pd.read_csv('category_exams.csv')
+    novus_output = pd.merge(left=novus_output, right=category_exams, how='left')
+
+    # Agregar SANGRE/ORINA a paneles conocidos 
+    novus_output['category'][novus_output['nameExam'].str.contains("Orina")] = "ORINA"
+    # novus_output['category'][novus_output['nameExam'].str.contains("PERFIL LIPIDICO", case = False)] = "SANGRE"
+    # novus_output['category'][novus_output['nameExam'].str.contains("PERFIL BIOQUIMICO")] = "SANGRE"
+    # novus_output['category'][novus_output['nameExam'].str.contains("PERFIL HEPÁTICO")] = "SANGRE"
+
+    novus_output['category'][novus_output['nameExam'].str.contains('PERFIL HEPÁTICO|PERFIL BIOQUIMICO|PERFIL LIPIDICO"', regex=True)] = "SANGRE"
 
     # reportar True en outofrange si analista flageo con *
-    novus_output['outOfRange'] = np.where(
-        novus_output['Estado'] == '*', 'true', 'false')
+    novus_output['outOfRange'] = np.where(novus_output['Estado'] == '*', 'true', 'false')
 
     # asignar tipo de rango y valores inferiores y superiores.
-    novus_output['categoryIndicator'], novus_output['referenceInf'], novus_output['referenceSup'] = zip(
-        *novus_output['Rango Ref'].apply(get_type))
+    novus_output['categoryIndicator'], novus_output['referenceInf'], novus_output['referenceSup'] = zip(*novus_output['Rango Ref'].apply(get_type))
 
     # cambiar nombre a vih
     novus_output.loc[novus_output.nameExam ==
@@ -96,17 +101,14 @@ if uploaded_file:
 
     # llenar reultados otherResults. # si la categoria es other, agregar el rango de referencia
     novus_output['otherResults'] = np.nan
-    novus_output['otherResults'] = np.where(
-        novus_output['categoryIndicator'] == 'other', novus_output['Rango Ref'], np.nan)
+    novus_output['otherResults'] = np.where(novus_output['categoryIndicator'] == 'other', novus_output['Rango Ref'], np.nan)
 
     # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
-    novus_output['requestStatus'] = np.where(
-        novus_output['result'].isnull(), 'Pending', 'Complete')
+    novus_output['requestStatus'] = np.where(novus_output['result'].isnull(), 'Pending', 'Complete')
 
     # drop columnas sobrantes
-    # referenceVerification(ORINA/DEFINIR)
 
-    #novus_output = novus_output.drop(['Estado' , 'Rango Ref'],axis = 1)
+    novus_output = novus_output.drop(['Estado' , 'Rango Ref'],axis = 1)
 
     csv = convert_df(novus_output)
 
