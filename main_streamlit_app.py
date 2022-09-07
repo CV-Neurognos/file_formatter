@@ -102,10 +102,9 @@ if uploaded_file:
     novus_output.loc[novus_output.nameExam ==
                      'HIV', 'categoryIndicator'] = 'confidencial'
 
-    # reference verification Orina
-    novus_output['referenceVerification(ORINA/DEFINIR)'] = np.nan
-    novus_output['descriptionIndicator'] = np.nan
-    novus_output['examStatus'] = 1
+    # examStatus
+    novus_output['examStatus'] = np.where(
+        novus_output['result'].isnull(), 'PENDING', 'COMPLETE')
 
     # llenar reultados otherResults. # si la categoria es other, agregar el rango de referencia
     novus_output['otherResults'] = np.nan
@@ -114,7 +113,7 @@ if uploaded_file:
 
     # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
     novus_output['requestStatus'] = np.where(
-        novus_output['result'].isnull(), 'Pending', 'Complete')
+        novus_output['result'].isnull(), 'PENDING', 'COMPLETE')
 
     # drop columnas sobrantes
 
