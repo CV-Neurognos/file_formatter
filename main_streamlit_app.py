@@ -5,11 +5,27 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from io import BytesIO
+import xlsxwriter
+from pyxlsb import open_workbook as open_xlsb
 
 
 @st.cache
 def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
+
+@st.cache
+def to_excel(df):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, index=False, sheet_name='Sheet1')
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+    format1 = workbook.add_format({'num_format': '0.00'})
+    worksheet.set_column('A:A', None, format1)
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
 
 
 def get_type(cell):
@@ -55,12 +71,15 @@ uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 if uploaded_file:
     # import novuslis output
     try:
-        novus_output = pd.read_excel(uploaded_file, skiprows=1)
+        novus_output = pd.read_excel(uploaded_file, skiprows=1 , parse_dates=['Fecha'])
     except:
         print('Error en el documento seleccionado')
 
     # cambiar de nombre columnas - usando dict_colnames
     novus_output = novus_output.rename(columns=DICT_COLNAMES)
+
+    # formatear fecha '2022-08-01 08:46:05' a '2022-08-01'
+    novus_output['dateExam'] = novus_output['dateExam'].dt.date
 
     # Drop columns
     novus_output = novus_output.drop(["Programa", "Edad", "Sexo"], axis=1)
@@ -112,18 +131,18 @@ if uploaded_file:
         novus_output['categoryIndicator'] == 'other', novus_output['Rango Ref'], np.nan)
 
     # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
-    novus_output['requestStatus'] = np.where(
-        novus_output['result'].isnull(), 'PENDING', 'COMPLETE')
+    novus_output['requestStatus'] = novus_output['examStatus']
 
     # drop columnas sobrantes
 
     novus_output = novus_output.drop(['Estado', 'Rango Ref'], axis=1)
 
-    csv = convert_df(novus_output)
+    #csv = convert_df(novus_output)
+    df_xlsx = to_excel(novus_output)
+
 
     st.download_button(
-        label="Download data as CSV",
-        data=csv,
-        file_name='output.csv',
-        mime='text/csv',
+        label="Download data as .xlsx",
+        data=df_xlsx,
+        file_name='output.xlsx'
     )
