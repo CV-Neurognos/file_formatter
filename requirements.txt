@@ -1,4 +1,4 @@
-io
+io >= 3.0.0
 pyxlsb
 xlsxwriter
 openpyxl
