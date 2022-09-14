@@ -135,7 +135,7 @@ if uploaded_file:
 
     # Llenar campo de code por codeInternal en casos vacios.
     # revisar si el campo tiene '-'
-    novus_output['code'] = novus_output['code'].str.split()
+    novus_output['code'] = novus_output['code'].str.strip()
     #novus_output['code'] = np.where(novus_output['code'] == '-', novus_output['codeInternal'].str.split('-', 1), novus_output['code'])
 
     # drop columnas sobrantes
