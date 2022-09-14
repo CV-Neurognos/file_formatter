@@ -68,7 +68,6 @@ DICT_COLNAMES = {"Valor": "result", 'Prestación Estructura': 'nameIndicator', "
 uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 
 if uploaded_file:
-
     # import novuslis output
     try:
         novus_output = pd.read_excel(uploaded_file, skiprows=1 , parse_dates=['Fecha'])
@@ -107,11 +106,11 @@ if uploaded_file:
     novus_output['category'][novus_output['nameExam'].str.contains(
         'PERFIL HEPÁTICO|PERFIL BIOQUIMICO|PERFIL LIPIDICO"', regex=True)] = "SANGRE"
 
-    # CREAR COLUMNA: outOfRange: reportar True si analista flageo con *
+    # reportar True en outofrange si analista flageo con *
     novus_output['outOfRange'] = np.where(
         novus_output['Estado'] == '*', 'true', 'false')
 
-    # CREAR COLUMNA: categoryIndicator: asignar tipo de rango y valores inferiores y superiores.
+    # asignar tipo de rango y valores inferiores y superiores.
     novus_output['categoryIndicator'], novus_output['referenceInf'], novus_output['referenceSup'] = zip(
         *novus_output['Rango Ref'].apply(get_type))
 
@@ -121,7 +120,7 @@ if uploaded_file:
     novus_output.loc[novus_output.nameExam ==
                      'HIV', 'categoryIndicator'] = 'confidencial'
 
-    # CREAR COLUMNA: examStatus
+    # examStatus
     novus_output['examStatus'] = np.where(
         novus_output['result'].isnull(), 'PENDING', 'COMPLETE')
 
@@ -132,12 +131,6 @@ if uploaded_file:
 
     # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
     novus_output['requestStatus'] = novus_output['examStatus']
-
-    # Llenar campo de code por codeInternal en casos vacios.
-    # revisar si el campo tiene '-'
-
-    novus_output['code'].strip()
-    novus_output['code'] = np.where(novus_output['code'] == '-', novus_output['codeInternal'].split('-', 1)[0], novus_output['code'])
 
     # drop columnas sobrantes
 
