@@ -69,10 +69,9 @@ uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 
 if uploaded_file:
     # import novuslis output
-    try:
-        novus_output = pd.read_excel(uploaded_file, skiprows=1 , parse_dates=['Fecha'])
-    except:
-        print('Error en el documento seleccionado')
+
+    novus_output = pd.read_excel(uploaded_file, skiprows=1 , parse_dates=['Fecha'])
+
 
     # cambiar de nombre columnas - usando dict_colnames
     novus_output = novus_output.rename(columns=DICT_COLNAMES)
