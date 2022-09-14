@@ -131,6 +131,10 @@ if uploaded_file:
     # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
     novus_output['requestStatus'] = novus_output['examStatus']
 
+    # add missing values to code column
+    novus_output['code'] = novus_output['code'].str.strip()
+    novus_output['code'] = np.where(novus_output['code'] == '-' , novus_output['codeInternal'].str.split('-',1)[0] , novus_output['code'] )
+
     # drop columnas sobrantes
 
     novus_output = novus_output.drop(['Estado', 'Rango Ref'], axis=1)
