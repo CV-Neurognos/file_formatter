@@ -60,11 +60,12 @@ def get_type(cell):
 DICT_COLNAMES = {"Valor": "result", 'Prestación Estructura': 'nameIndicator', "Unidad": "unitMeasurement", "Fecha": "dateExam", "CodFonasa": "code",
                  "Orden": "requestId", "Documento": "clientId", "Paciente": "clientName", "CodInterno": "codeInternal", "Prestacion Orden": "nameExam"}
 
-
+DICT_COLNAMES_BM = {'Fecha solicitud':'dateExam', 'Documento':'clientId','Prestacion':'nameExam', 'Resultado':'result', 'Orden':'requestId'}
+BORRAR = ['Toma muestra','Fecha nacimiento','Validación','Procedencia','TipoDoc','Nombre', 'ApellidoPaterno','ApellidoMaterno','Edad','Sexo','Comuna','Dirección','Telefono','Email']
 #################################################################################
 #####################            STREAMLIT           ############################
 #################################################################################
-
+st.header('NOVUSLIS CORE')
 uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 
 if uploaded_file:
@@ -141,6 +142,71 @@ if uploaded_file:
 
     #csv = convert_df(novus_output)
     df_xlsx = to_excel(novus_output)
+
+
+    st.download_button(
+        label="Download data as .xlsx",
+        data=df_xlsx,
+        file_name='output.xlsx'
+    )
+
+
+st.header('NOVUSLIS BM')
+uploaded_file_bm = st.file_uploader("Archivo XLS novuslis BM", type="xls")
+if uploaded_file_bm:
+    # import novuslis output
+    df_novus_bm = pd.read_excel(uploaded_file_bm, parse_dates=['Fecha solicitud'])
+    df_novus_bm = df_novus_bm.fillna('')
+
+    # cambiar de nombre columnas - usando dict_colnames_2
+    df_novus_bm = df_novus_bm.rename(columns=DICT_COLNAMES_BM)
+
+    # formatear fecha '2022-08-01 08:46:05' a '2022-08-01'
+    df_novus_bm['dateExam'] = df_novus_bm['dateExam'].dt.date
+
+    # concatenar columna de nombres
+    df_novus_bm['clientName'] = df_novus_bm['Nombre'] + ' ' + df_novus_bm['ApellidoPaterno'] + ' ' + df_novus_bm['ApellidoMaterno']
+
+    #drop columnas innecesarias
+    df_novus_bm = df_novus_bm.drop(BORRAR, axis = 1)
+
+    # Agregar columnas para completar formateado
+
+    df_novus_bm['unitMeasurement'] = np.nan
+    df_novus_bm['codeInternal'] = np.nan
+    df_novus_bm['code'] = np.nan
+    df_novus_bm['category'] = np.nan
+    df_novus_bm['nameIndicator'] = np.nan
+    df_novus_bm['referenceInf'] = np.nan
+    df_novus_bm['referenceSup'] = np.nan
+    df_novus_bm['otherResults'] = np.nan
+
+    # asignar nameIndicators
+    df_novus_bm['nameIndicator'][df_novus_bm['nameExam'].str.contains('ANTIGENO')] = 'CORONAVIRUS ANTI-SARS-CoV-2, IgG'
+    df_novus_bm['nameIndicator'][df_novus_bm['nameExam'].str.contains('PCR SARS-CoV-2|Test de saliva Covid-19')] = 'SARS-CoV-2 (COVID-19) RNA'
+
+    # Agregar codigos LOINC: codeIndicator
+    loinc_db = pd.read_csv('loinc_db.csv', sep='\t', error_bad_lines=False)
+    loinc_db = loinc_db.dropna()
+    df_novus_bm = pd.merge(left=df_novus_bm, right=loinc_db, how='left', left_on=['nameExam', 'nameIndicator'], right_on=['Prestacion Orden', 'Prestación Estructura'])
+    df_novus_bm = df_novus_bm.drop(['Prestación Estructura', 'Prestacion Orden'], axis=1)
+
+
+    # agregar columnas outOfRange y categoryIndicator
+    df_novus_bm['categoryIndicator'] = 'true-false'
+    df_novus_bm['outOfRange'] = np.where(df_novus_bm['result'].str.lower() == 'negativo', 'false', 'true')
+
+    # examStatus
+    df_novus_bm['examStatus'] = np.where(df_novus_bm['result'].isnull(), 'PENDING', 'COMPLETE')
+
+    #df_novus_bm['otherResults'] = np.where(df_novus_bm['categoryIndicator'] == 'other', df_novus_bm['Rango Ref'], np.nan)
+
+    # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
+    df_novus_bm['requestStatus'] = df_novus_bm['examStatus']
+
+
+    #csv = convert_df(novus_output)
+    df_xlsx = to_excel(df_novus_bm)
 
 
     st.download_button(
