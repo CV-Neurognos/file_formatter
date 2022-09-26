@@ -204,6 +204,14 @@ if uploaded_file_bm:
     # llenar resultados requestStatus. # si el resultado esta vacio, cambair requestStatus a Incomplete,
     df_novus_bm['requestStatus'] = df_novus_bm['examStatus']
 
+    # asignar code y codeInternal
+    df_novus_bm['nameIndicator'][df_novus_bm['nameExam'].str.contains('ANTIGENO')] = 'CORONAVIRUS ANTI-SARS-CoV-2, IgG'
+
+    df_novus_bm['code'][df_novus_bm['nameIndicator'].str.contains('CORONAVIRUS ANTI-SARS-CoV-2, IgG')] = '0006060'
+    df_novus_bm['code'][df_novus_bm['nameIndicator'].str.contains('SARS-CoV-2 (COVID-19) RNA')] = '0306082'
+    df_novus_bm['codeInternal'] = df_novus_bm['code']
+    
+
 
     #csv = convert_df(novus_output)
     df_xlsx = to_excel(df_novus_bm)
