@@ -71,7 +71,7 @@ uploaded_file = st.file_uploader("Choose a XLS file", type="xls")
 if uploaded_file:
     # import novuslis output
 
-    novus_output = pd.read_excel(uploaded_file, skiprows=1 , parse_dates=['Fecha'])
+    novus_output = pd.read_excel(uploaded_file, skiprows=1 , parse_dates=['Fecha'] , dtype={'CodInterno': object,'CodFonasa': object,'Documento': object})
 
 
     # cambiar de nombre columnas - usando dict_colnames
@@ -134,10 +134,10 @@ if uploaded_file:
 
     # add missing values to code column
     novus_output['code'] = novus_output['code'].str.strip()
-    novus_output['code'] = np.where(novus_output['code'] == '-' , novus_output['codeInternal'].str.split('-',1)[0] , novus_output['code'] )
+    novus_output['code'] = novus_output['code'].apply(
+        lambda x: x.str.split('-', 1)[0] if x == '' else x)
 
     # drop columnas sobrantes
-
     novus_output = novus_output.drop(['Estado', 'Rango Ref'], axis=1)
 
     #csv = convert_df(novus_output)
@@ -208,7 +208,7 @@ if uploaded_file_bm:
     df_novus_bm['code'][df_novus_bm['codeIndicator'].str.contains('95209-3')] = '0006060'
     df_novus_bm['code'][df_novus_bm['codeIndicator'].str.contains('94309-2')] = '0306082'
     df_novus_bm['codeInternal'] = df_novus_bm['code']
-    
+
     #csv = convert_df(novus_output)
     df_xlsx = to_excel(df_novus_bm)
 
