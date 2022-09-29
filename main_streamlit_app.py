@@ -134,8 +134,13 @@ if uploaded_file:
 
     # add missing values to code column
     novus_output['code'] = novus_output['code'].str.strip()
-    novus_output['code'] = novus_output['code'].apply(
-        lambda x: x.str.split('-', 1)[0] if x == '' else x)
+    novus_output['code'] = np.where(novus_output['code'] == '-', novus_output['codeInternal'].str.split('-', 1)[0], novus_output['code'])
+
+    # novus_output['code'] = novus_output['code'].apply(lambda x: x.str.split('-', 1)[0] if x == '' else x)
+    #
+    # splitted_code_internal = novus_output['codeInternal'].astype("string").apply(lambda x: x.split('-')[0])
+    #
+    # novus_output['code'] = np.where(novus_output['code'].astype("string") == '-', splitted_code_internal, novus_output['code'])
 
     # drop columnas sobrantes
     novus_output = novus_output.drop(['Estado', 'Rango Ref'], axis=1)
