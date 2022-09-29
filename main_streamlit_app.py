@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
+#import time
 
 
 @st.cache
@@ -133,14 +134,15 @@ if uploaded_file:
     novus_output['requestStatus'] = novus_output['examStatus']
 
     # add missing values to code column
-    novus_output['code'] = novus_output['code'].str.strip()
-    novus_output['code'] = np.where(novus_output['code'] == '-', novus_output['codeInternal'].str.split('-', 1)[0], novus_output['code'])
-
+    #start = time.time()
+    splitted_code_internal = novus_output['codeInternal'].astype("string").apply(lambda x: x.split('-')[0])
+    novus_output['code'] = np.where(novus_output['code'].astype("string") == '-', splitted_code_internal, novus_output['code'])
+    #end = time.time()
+    #time_ex = (end-start) * 10**3
+    #st.write(time_ex)
     # novus_output['code'] = novus_output['code'].apply(lambda x: x.str.split('-', 1)[0] if x == '' else x)
     #
-    # splitted_code_internal = novus_output['codeInternal'].astype("string").apply(lambda x: x.split('-')[0])
-    #
-    # novus_output['code'] = np.where(novus_output['code'].astype("string") == '-', splitted_code_internal, novus_output['code'])
+
 
     # drop columnas sobrantes
     novus_output = novus_output.drop(['Estado', 'Rango Ref'], axis=1)
